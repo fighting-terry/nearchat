@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatConversation, ChatMessage, UserProfile } from '../types';
-import { GoogleGenAI } from "@google/genai";
+// import { GoogleGenAI } from "@google/genai";
 import { BackendService } from '../backend';
 
 interface ChatRoomProps {
@@ -59,40 +59,34 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ conversation, onBack, userProfile, 
     setIsTyping(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
-      const historyStr = conversation.messages
-        .slice(-10)
-        .map(m => `${m.senderId === 'user' ? 'User' : conversation.match.nickname}: ${m.text}`)
-        .join('\n');
+	  const res = await fetch("/api/chat", {
+		method: "POST",
+		headers: {
+		  "Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+		  conversation,
+		  userProfile,
+		  userMessage: userMsgText,
+		}),
+	  });
 
-      const systemInstruction = `
-        You are ${conversation.match.nickname}, a ${conversation.match.age} ${conversation.match.gender}.
-        Character: Heart-fluttering, flirty, charming. Brief responses in ${userProfile.language}.
-      `;
+	  const data = await res.json();
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: { parts: [{ text: `History:\n${historyStr}\n\nResponse:` }] },
-        config: { systemInstruction }
-      });
+	  const aiMessage: ChatMessage = {
+		id: `ai-${Date.now()}`,
+		senderId: conversation.match.id,
+		text: data.reply || "😊",
+		timestamp: new Date(),
+	  };
 
-      const replyText = response.text || "😊";
-      
-      const aiMessage: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        senderId: conversation.match.id,
-        text: replyText.trim(),
-        timestamp: new Date(),
-      };
+	  await BackendService.sendMessage(conversation.id, aiMessage);
+	  setIsTyping(false);
 
-      await BackendService.sendMessage(conversation.id, aiMessage);
-      setIsTyping(false);
-
-    } catch (err) {
-      console.error("AI Error:", err);
-      setIsTyping(false);
-    }
+	} catch (err) {
+	  console.error("AI Error:", err);
+	  setIsTyping(false);
+	}
   };
 
   return (
