@@ -63,7 +63,9 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onComplete }) => {
 		language,
 		interests: selectedInterests
 	  });
+	  console.log("submit 클릭됨");
 	}
+	console.log("submit 클릭됨");
   };
 
   const LegalModal = ({ type }: { type: 'terms' | 'privacy' }) => (

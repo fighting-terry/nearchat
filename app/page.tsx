@@ -1,9 +1,27 @@
+"use client";
 
+import { useState } from "react";
 import SetupProfile from "@/components/SetupProfile";
+import DiscoveryFeed from "@/components/DiscoveryFeed";
+import { UserProfile } from "@/types";
 
 export default function Home() {
-  return <SetupProfile />;
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  const handleLogout = () => {
+    setProfile(null);
+  };
+
+  return profile ? (
+    <DiscoveryFeed
+      userProfile={profile}
+      onLogout={handleLogout}
+    />
+  ) : (
+    <SetupProfile onComplete={setProfile} />
+  );
 }
+
 
 /* import SetupProfile from "@/components/SetupProfile";
 
